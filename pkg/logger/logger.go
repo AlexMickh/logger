@@ -66,6 +66,9 @@ func (l *Logger) Fatal(ctx context.Context, msg string, fields ...zap.Field) {
 }
 
 func (l *Logger) With(ctx context.Context, fields ...zap.Field) context.Context {
+	if ctx.Value(RequestID) != nil {
+		fields = append(fields, zap.String(RequestID, ctx.Value(RequestID).(string)))
+	}
 	return context.WithValue(ctx, Key, &Logger{log: l.log.With(fields...)})
 }
 
