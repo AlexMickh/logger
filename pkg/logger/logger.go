@@ -32,6 +32,7 @@ func New(ctx context.Context, env string) (context.Context, error) {
 		if err != nil {
 			return nil, err
 		}
+	case "local":
 	case "dev":
 		logger, err = zap.NewDevelopment()
 		if err != nil {
