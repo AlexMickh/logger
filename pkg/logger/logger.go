@@ -102,6 +102,29 @@ func Interceptor(ctx context.Context) grpc.UnaryServerInterceptor {
 	}
 }
 
+func StreamInterceptor(ctx context.Context) grpc.StreamServerInterceptor {
+	return func(srv any, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
+		log := GetFromCtx(ctx)
+		ctx = context.WithValue(ss.Context(), Key, log)
+
+		md, ok := metadata.FromIncomingContext(ctx)
+		if ok {
+			guid, ok := md[RequestID]
+			if ok {
+				GetFromCtx(ctx).Error(ctx, "No request id")
+				ctx = context.WithValue(ctx, RequestID, guid)
+			}
+		}
+
+		GetFromCtx(ctx).Info(ctx, "request",
+			zap.String("method", info.FullMethod),
+			zap.Time("request time", time.Now()),
+		)
+
+		return handler(srv, ss)
+	}
+}
+
 func ChiMiddleware(ctx context.Context) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		ctx = GetFromCtx(ctx).With(ctx,
